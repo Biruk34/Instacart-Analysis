@@ -3,31 +3,45 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 
 # Load the data from the Instacart dataset
+# Data source: https://www.instacart.com/datasets/grocery-shopping-2017
 instadata = pd.read_csv('InstacartOrdersByDepartment.csv')
 
-# Research Question 1: Do people order different foods at different times of day? For example, do people order more junk food relative to other foods late at night?
-
 # Calculate the proportion of products ordered per department per hour
+# This helps us see how the demand for different products varies throughout the day
 instadata['proportion'] = instadata['num_orders_hour'] / instadata['tot_orders_dept']
 
-# Define departments of interest
+# Group the data by department
+grouped_data = instadata.groupby('department')
+
+# The departments to focus on
 departments = ['snacks', 'frozen', 'dairy eggs', 'produce']
 
-# Set up the plot
-plt.figure(figsize=(12, 6))
-sns.set_palette("Set2")
+# Create a new figure
+fig, ax = plt.subplots(figsize=(12, 6))
 
 for department in departments:
-    department_data = instadata[instadata['department'] == department]
-    plt.plot(department_data['order_hour_of_day'], department_data['proportion'], label=department)
+    department_data = grouped_data.get_group(department)
+    ax.plot(department_data['order_hour_of_day'], department_data['proportion'], label=department)
 
-# Customize the plot
-plt.title('Hourly Product Demand by Department')
-plt.xlabel('Hour of the Day')
-plt.ylabel('Proportion of Products Ordered')
-plt.xticks(range(0, 24, 2), ['12am', '2am', '4am', '6am', '8am', '10am', '12pm', '2pm', '4pm', '6pm', '8pm', '10pm'])
-plt.yticks([0, 0.02, 0.04, 0.06, 0.08], ['0%', '2%', '4%', '6%', '8%'])
-plt.legend()
-plt.tight_layout()
-plt.savefig('hourly_product_demand.png')
+# Set the x-axis label 
+ax.set_xlabel('Hour of the Day')
+ax.set_xticks(range(0, 24, 2))
+ax.set_xticklabels(['12am', '2am', '4am', '6am', '8am', '10am', '12pm', '2pm', '4pm', '6pm', '8pm', '10pm'])
+
+# Set the y-axis label and tick marks
+ax.set_ylabel('Proportion of Products Ordered')
+ax.set_yticks([0, 0.02, 0.04, 0.06, 0.08])
+ax.set_yticklabels(['0%', '2%', '4%', '6%', '8%'])
+
+dept_hour_prop = pd.pivot_table(instadata, values='num_orders_hour', 
+index='order_hour_of_day', columns='department', aggfunc=sum) / instadata['tot_orders_dept'].sum()
+
+# Set the title and legend
+plt.figure(figsize=(12, 8))
+sns.heatmap(dept_hour_prop, cmap='YlOrRd')
+plt.title('Hourly Product Ordering by Department')
+plt.xlabel('Department')
+plt.ylabel('Hour')
 plt.show()
+plt.savefig('product_demand.png')
+
