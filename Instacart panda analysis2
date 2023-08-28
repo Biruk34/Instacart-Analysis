@@ -1,0 +1,20 @@
+
+# Research Question 2: What is the Weekend vs. Weekday Ordering Behavior
+
+# Calculate the proportion of products ordered per department for weekends and weekdays
+instadata['proportion_weekend'] = instadata['num_orders_hour'] / instadata.groupby(['department', 'weekend'])['num_orders_hour'].transform('sum')
+
+# Pivot the data for plotting
+weekend_pivot = pd.pivot_table(instadata, values='proportion_weekend', index='order_hour_of_day', columns='department', aggfunc='mean')
+
+# Create a heatmap
+plt.figure(figsize=(12, 8))
+sns.heatmap(weekend_pivot, cmap='YlGnBu', cbar_kws={'label': 'Proportion of Products Ordered'})
+plt.title('Hourly Product Ordering by Department (Weekend vs. Weekday)')
+plt.xlabel('Department')
+plt.ylabel('Hour of the Day')
+plt.xticks(rotation=45)
+plt.tight_layout()
+plt.savefig('weekend_vs_weekday.png')
+plt.show()
+
