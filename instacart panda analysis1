@@ -1,0 +1,33 @@
+import pandas as pd
+import matplotlib.pyplot as plt
+import seaborn as sns
+
+# Load the data from the Instacart dataset
+instadata = pd.read_csv('InstacartOrdersByDepartment.csv')
+
+# Research Question 1: Do people order different foods at different times of day? For example, do people order more junk food relative to other foods late at night?
+
+# Calculate the proportion of products ordered per department per hour
+instadata['proportion'] = instadata['num_orders_hour'] / instadata['tot_orders_dept']
+
+# Define departments of interest
+departments = ['snacks', 'frozen', 'dairy eggs', 'produce']
+
+# Set up the plot
+plt.figure(figsize=(12, 6))
+sns.set_palette("Set2")
+
+for department in departments:
+    department_data = instadata[instadata['department'] == department]
+    plt.plot(department_data['order_hour_of_day'], department_data['proportion'], label=department)
+
+# Customize the plot
+plt.title('Hourly Product Demand by Department')
+plt.xlabel('Hour of the Day')
+plt.ylabel('Proportion of Products Ordered')
+plt.xticks(range(0, 24, 2), ['12am', '2am', '4am', '6am', '8am', '10am', '12pm', '2pm', '4pm', '6pm', '8pm', '10pm'])
+plt.yticks([0, 0.02, 0.04, 0.06, 0.08], ['0%', '2%', '4%', '6%', '8%'])
+plt.legend()
+plt.tight_layout()
+plt.savefig('hourly_product_demand.png')
+plt.show()
