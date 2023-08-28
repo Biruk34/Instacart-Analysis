@@ -1,0 +1,83 @@
+import pandas as pd
+import matplotlib.pyplot as plt
+import seaborn as sns
+
+# Load the data from the Instacart dataset
+instadata = pd.read_csv('InstacartOrdersByDepartment.csv')
+
+# Research Question 1: Do people order different foods at different times of day? For example, do people order more junk food relative to other foods late at night?
+
+# Calculate the proportion of products ordered per department per hour
+instadata['proportion'] = instadata['num_orders_hour'] / instadata['tot_orders_dept']
+
+# Define departments of interest
+departments = ['snacks', 'frozen', 'dairy eggs', 'produce']
+
+# Set up the plot
+plt.figure(figsize=(12, 6))
+sns.set_palette("Set2")
+
+for department in departments:
+    department_data = instadata[instadata['department'] == department]
+    plt.plot(department_data['order_hour_of_day'], department_data['proportion'], label=department)
+
+# Customize the plot
+plt.title('Hourly Product Demand by Department')
+plt.xlabel('Hour of the Day')
+plt.ylabel('Proportion of Products Ordered')
+plt.xticks(range(0, 24, 2), ['12am', '2am', '4am', '6am', '8am', '10am', '12pm', '2pm', '4pm', '6pm', '8pm', '10pm'])
+plt.yticks([0, 0.02, 0.04, 0.06, 0.08], ['0%', '2%', '4%', '6%', '8%'])
+plt.legend()
+plt.tight_layout()
+plt.savefig('hourly_product_demand.png')
+plt.show()
+
+# Research Question 2: What is the Weekend vs. Weekday Ordering Behavior
+
+# Calculate the proportion of products ordered per department for weekends and weekdays
+instadata['proportion_weekend'] = instadata['num_orders_hour'] / instadata.groupby(['department', 'weekend'])['num_orders_hour'].transform('sum')
+
+# Pivot the data for plotting
+weekend_pivot = pd.pivot_table(instadata, values='proportion_weekend', index='order_hour_of_day', columns='department', aggfunc='mean')
+
+# Create a heatmap
+plt.figure(figsize=(12, 8))
+sns.heatmap(weekend_pivot, cmap='YlGnBu', cbar_kws={'label': 'Proportion of Products Ordered'})
+plt.title('Hourly Product Ordering by Department (Weekend vs. Weekday)')
+plt.xlabel('Department')
+plt.ylabel('Hour of the Day')
+plt.xticks(rotation=45)
+plt.tight_layout()
+plt.savefig('weekend_vs_weekday.png')
+plt.show()
+
+# Research Question 3: Which is more informative: raw counts of number of products ordered per department per hour or the proportion of products ordered per department per hour ?
+
+
+# Calculate the raw counts of products ordered per department per hour
+dept_hour_counts = pd.pivot_table(instadata, values='num_orders_hour', index='order_hour_of_day', columns='department', aggfunc='sum')
+
+# Calculate the proportions of products ordered per department per hour
+dept_hour_prop = pd.pivot_table(instadata, values='num_orders_hour', index='order_hour_of_day', columns='department', aggfunc='sum') / instadata['tot_orders_dept'].sum()
+
+# Create a new figure with subplots
+fig, axes = plt.subplots(1, 2, figsize=(16, 6))
+sns.set_palette("YlOrRd")
+
+# Plot raw counts
+sns.heatmap(dept_hour_counts, cmap='YlOrRd', ax=axes[0], cbar_kws={'label': 'Raw Counts'})
+axes[0].set_title('Raw Counts of Product Ordering by Department and Hour')
+axes[0].set_xlabel('Department')
+axes[0].set_ylabel('Hour of the Day')
+
+# Plot proportions
+sns.heatmap(dept_hour_prop, cmap='YlOrRd', ax=axes[1], cbar_kws={'label': 'Proportion of Products Ordered'})
+axes[1].set_title('Proportions of Product Ordering by Department and Hour')
+axes[1].set_xlabel('Department')
+axes[1].set_ylabel('Hour of the Day')
+
+plt.tight_layout()
+plt.savefig('raw_counts_vs_proportions.png')
+plt.show()
+
+
